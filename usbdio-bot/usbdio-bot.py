@@ -34,17 +34,18 @@ def handle_command(command, channel):
         are valid commands. If so, then acts on the commands. If not,
         returns back what it needs for clarification.
     """
-    usbdio_args = [USBDIO_TOOL, ]
+    usbdio_args = [USBDIO_TOOL]
 
     if not command.startswith(('-h', '-v', '-l', '-e', '-o', '-i')):
         print 'Unknown command {}'.format(command)
-        usbdio_args.extend('-h')
-        response = subprocess.check_output(usbdio_args)
+        usbdio_args.append('-h')
     else:
         usbdio_args.extend([cmd for cmd in command.split()])
-        print 'Calling subprocess: {}'.format(usbdio_args)
-        response = subprocess.check_output(usbdio_args)
-        print 'Response: {}'.format(response)
+
+    # Security?  What security??
+    print 'Calling subprocess: {}'.format(usbdio_args)
+    response = subprocess.check_output(usbdio_args)
+    print 'Response: {}'.format(response)
     slack_client.api_call("chat.postMessage", channel=channel, text=response, as_user=True)
 
 
