@@ -22,7 +22,7 @@ USBDIO_TOOL = os.path.join(USBDIO_PATH, 'usbdio_info.exe')
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
-EXAMPLE_COMMAND = "do"
+EXAMPLE_COMMAND = "help"
 
 # instantiate Slack & Twilio clients
 slack_client = SlackClient(os.environ.get('USBDIO_BOT_TOKEN'))
@@ -34,18 +34,20 @@ def handle_command(command, channel):
         are valid commands. If so, then acts on the commands. If not,
         returns back what it needs for clarification.
     """
-    response = "Not sure what you mean. Use the *" + EXAMPLE_COMMAND + \
-               "* command with numbers, delimited by spaces."
+    response = "I don't understand that command.  Try 'help'."
     if command.startswith(('help', '?', '-h', '-v', '-l', '-e', '-o', '-i')):
-        response = subprocess.check_output([USBDIO_TOOL, [cmd for cmd in command.split()]])
-    slack_client.api_call("chat.postMessage", channel=channel,
-                          text=response, as_user=True)
+        usbdio_args = [USBDIO_TOOL, ]
+        usbdio_args.extend([cmd for cmd in command.split()])
+        print 'Calling subprocess: {}'.format(usbdio_args)
+        response = subprocess.check_output(usbdio_args)
+        print 'Response: {}'.format(response)
+    slack_client.api_call("chat.postMessage", channel=channel, text=response, as_user=True)
 
 
 def parse_slack_output(slack_rtm_output):
     """
         The Slack Real Time Messaging API is an events firehose.
-        this parsing function returns None unless a message is
+        This parsing function returns None unless a message is
         directed at the Bot, based on its ID.
     """
     output_list = slack_rtm_output
@@ -61,7 +63,7 @@ def parse_slack_output(slack_rtm_output):
 if __name__ == "__main__":
     READ_WEBSOCKET_DELAY = 1  # 1 second delay between reading from firehose
     if slack_client.rtm_connect():
-        print("StarterBot connected and running!")
+        print("usbdio-bot {} connected and running!".format(BOT_ID))
         while True:
             command, channel = parse_slack_output(slack_client.rtm_read())
             if command and channel:
