@@ -38,9 +38,9 @@ def handle_command(command, channel):
 
     args = command.split()
     if args[0] in ('set', 'enable', 'open', 'push'):
-        usbdio_args.append(['-o', '0', '0', '1'])
+        usbdio_args.extend(['-o', '0', '0', '1'])
     elif args[0] in ('clear', 'unset', 'reset', 'disable', 'close', 'unpush'):
-        usbdio_args.append(['-o', '0', '0', '0'])
+        usbdio_args.extend(['-o', '0', '0', '0'])
     elif not command.startswith(('-h', '-v', '-l', '-e', '-o', '-i')):
         print 'Unknown command {}'.format(command)
         usbdio_args.append('-h')
