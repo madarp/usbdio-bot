@@ -18,7 +18,7 @@ BOT_NAME = 'usbdio-bot'
 # usbdio-bot's ID as an environment variable
 BOT_ID = os.environ.get('USBDIO_BOT_ID')
 USBDIO_PATH = os.environ.get('USBDIO_PATH')
-USBDIO_TOOL = os.path.join(USBDIO_PATH, 'usbdio_info.exe')
+USBDIO_TOOL = os.path.join(USBDIO_PATH, 'usbdio_info')
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
@@ -34,9 +34,13 @@ def handle_command(command, channel):
         are valid commands. If so, then acts on the commands. If not,
         returns back what it needs for clarification.
     """
-    response = "I don't understand that command.  Try 'help'."
-    if command.startswith(('help', '?', '-h', '-v', '-l', '-e', '-o', '-i')):
-        usbdio_args = [USBDIO_TOOL, ]
+    usbdio_args = [USBDIO_TOOL, ]
+
+    if not command.startswith(('-h', '-v', '-l', '-e', '-o', '-i')):
+        print 'Unknown command {}'.format(command)
+        usbdio_args.extend('-h')
+        response = subprocess.check_output(usbdio_args)
+    else:
         usbdio_args.extend([cmd for cmd in command.split()])
         print 'Calling subprocess: {}'.format(usbdio_args)
         response = subprocess.check_output(usbdio_args)
