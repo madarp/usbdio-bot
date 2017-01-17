@@ -37,10 +37,14 @@ def handle_command(command, channel):
     usbdio_args = [USBDIO_TOOL]
 
     args = command.split()
+
+    # Which relay is being switched?
+    chan = args[1] if len(args) > 1 else '0'
+
     if args[0] in ('set', 'enable', 'open', 'push'):
-        usbdio_args.extend(['-o', '0', '0', '1'])
+        usbdio_args.extend(['-o', '0', chan, '1'])
     elif args[0] in ('clear', 'unset', 'reset', 'disable', 'close', 'unpush'):
-        usbdio_args.extend(['-o', '0', '0', '0'])
+        usbdio_args.extend(['-o', '0', chan, '0'])
     elif not command.startswith(('-h', '-v', '-l', '-e', '-o', '-i')):
         print 'Unknown command {}'.format(command)
         usbdio_args.append('-h')
@@ -49,7 +53,10 @@ def handle_command(command, channel):
 
     # Security?  What security??
     print 'Calling subprocess: {}'.format(usbdio_args)
-    response = subprocess.check_output(usbdio_args)
+    try:
+        response = subprocess.check_output(usbdio_args)
+    except Exception:
+        response = 'Error issuing usbdio command'
     print 'Response: {}'.format(response)
     slack_client.api_call("chat.postMessage", channel=channel, text=response, as_user=True)
 
