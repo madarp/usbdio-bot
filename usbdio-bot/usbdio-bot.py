@@ -82,9 +82,13 @@ if __name__ == "__main__":
     if slack_client.rtm_connect():
         print("usbdio-bot {} connected and running!".format(BOT_ID))
         while True:
-            command, channel = parse_slack_output(slack_client.rtm_read())
-            if command and channel:
-                handle_command(command, channel)
+            try:
+                command, channel = parse_slack_output(slack_client.rtm_read())
+                if command and channel:
+                    handle_command(command, channel)
+            except Exception as e:
+                print('ERROR reading from slack RTM feed: {}'.format(str(e)))
+            
             time.sleep(READ_WEBSOCKET_DELAY)
     else:
         print("Connection failed. Invalid Slack token or bot ID?")
