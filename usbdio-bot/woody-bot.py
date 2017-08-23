@@ -57,6 +57,7 @@ def switch_relay(chan, state):
     :return: a Error response string to send back to Slack. None=No error.
     """
     r = None
+    print 'chan=' + str(chan)
     if chan is None or chan not in range(1, 8):
         r = 'Please provide a trigger channel 1-8'
     else:
@@ -107,6 +108,10 @@ def handle_command(cmdline, channel):
         response = switch_relay(chan, False)
         if response is None:
             response = 'Trigger {} was pulsed for 1 second.'.format(chan)
+
+    elif cmd == 'exit':
+        sigterm_event.set()
+        response = '{} is terminating!'.format(BOT_NAME)
 
     return response
 
@@ -182,7 +187,9 @@ if __name__ == "__main__":
             break
 
         except Exception as e:
-            logger.error('{} Unhandled Exception in MAIN'.format(AT_BOT), exc_info=True)
+            error_str = '{} Unhandled Exception in MAIN\n{}\nRestarting ...'.format(AT_BOT, str(e))
+            logger.error(error_str, exc_info=True)
+            sc.api_call('chat.postMessage', channel='#bot-test', text=error_str, as_user=True)
             time.sleep(5.0)
             continue
 
