@@ -57,11 +57,10 @@ def switch_relay(chan, state):
     :return: a Error response string to send back to Slack. None=No error.
     """
     r = None
-    print 'chan=' + str(chan)
-    if chan is None or chan not in range(1, 8):
-        r = 'Please provide a trigger channel 1-8'
+    if chan and chan in range(1, len(GPIO_PINS)+1):
+        GPIO.output(GPIO_PINS[chan - 1], GPIO.LOW if state else GPIO.HIGH)
     else:
-        GPIO.output(GPIO_PINS[chan-1], GPIO.LOW if state else GPIO.HIGH)
+        r = 'Please provide a trigger channel 1-8'
     return r
 
 
@@ -80,7 +79,6 @@ def handle_command(cmdline, channel):
     args = cmdline.lower().split()
     cmd = args[0]
     chan = None if len(args) < 2 else args[1]
-    logger.info('arg0={} arg1={}'.format(args[0], args[1]))
 
     if cmd not in BOT_COMMANDS:
         response = 'Unknown command "{}"'.format(cmd)
