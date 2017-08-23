@@ -74,12 +74,13 @@ def handle_command(cmdline, channel):
     :param channel: The slack channel which received the command.
     :return: A Text string response to send to the Slack channel.
     """
+    logger.info('{} Received cmdline {} in channel {}'.format(AT_BOT, command, channel))
     response = None
     args = cmdline.lower().split()
     cmd = args[0]
     chan = None if len(args) < 2 else args[1]
+    logger.info('arg0={} arg1={}'.format(args[0], args[1]))
 
-    logger.info('{} Received command {} in channel {}'.format(AT_BOT, cmd, channel))
     if cmd not in BOT_COMMANDS:
         response = 'Unknown command "{}"'.format(cmd)
 
@@ -162,7 +163,8 @@ if __name__ == "__main__":
         try:
             if sc.rtm_connect():
                 bot_start = datetime.datetime.now()
-                logger.info('{} is connected to server {} at {}'.format(AT_BOT, sc.server, bot_start))
+                logger.info('{} is connected to server:\n{}'.format(AT_BOT, sc.server))
+                sc.api_call('chat.postMessage', channel='#bot-test', text='{} is now online.'.format(BOT_NAME), as_user=True)
 
                 while not sigterm_event.is_set():
                     time.sleep(1.0)
