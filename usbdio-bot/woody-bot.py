@@ -80,7 +80,7 @@ def handle_command(cmdline, channel):
     response = None
     args = cmdline.lower().split()
     cmd = args[0]
-    chan = None if len(args) < 2 else args[1]
+    chan = None if len(args) < 2 else int(args[1])
 
     if cmd not in BOT_COMMANDS:
         response = 'Unknown command "{}"'.format(cmd)
