@@ -29,6 +29,7 @@ BOT_COMMANDS = ['help', 'open', 'close', 'bounce', 'pulse' 'ping', 'exit']
 # Basic setup
 logger = logging.getLogger(__name__)
 sigterm_event = Event()
+bot_start = None
 
 # GPIO setup
 GPIO.setmode(GPIO.BCM)
@@ -84,12 +85,14 @@ def handle_command(cmdline, channel):
 
     if cmd not in BOT_COMMANDS:
         response = 'Unknown command "{}"'.format(cmd)
+        logger.error(AT_BOT + ' ' + response)
 
     elif cmd == 'help':
         response = 'Available commands are:' \
                    '\n  open N     Open a trigger, N=1-8' \
                    '\n  close N    Close a trigger N=1-8' \
-                   '\n  pulse N    Open N, wait 1 sec, then close N' \
+                   '\n  pulse N    Open trigger N, wait 1 sec, then close N' \
+                   '\n  exit       Make ' + BOT_NAME + ' exit. '
 
     elif cmd == 'open':
         # Which relay is being switched?
@@ -102,12 +105,16 @@ def handle_command(cmdline, channel):
         if response is None:
             response = 'Trigger {} is now CLOSED.'.format(chan)
 
-    elif cmd == 'pulse':
+    elif cmd == 'pulse' or cmd == 'bounce':
         switch_relay(chan, True)
         time.sleep(1.0)
         response = switch_relay(chan, False)
         if response is None:
             response = 'Trigger {} was pulsed for 1 second.'.format(chan)
+
+    elif cmd == 'ping':
+        uptime = datetime.datetime.now() - bot_start
+        response = '{} is active, uptime={}'.format(BOT_NAME, uptime)
 
     elif cmd == 'exit':
         sigterm_event.set()
@@ -135,6 +142,8 @@ def parse_slack_output(slack_rtm_output):
 if __name__ == "__main__":
 
     app_start_time = datetime.datetime.now()
+    global bot_start
+
     print '\n'\
         '-------------------------------------------------------------------\n'\
         '    Running {0}\n'\
@@ -172,11 +181,11 @@ if __name__ == "__main__":
                 sc.api_call('chat.postMessage', channel='#bot-test', text='{} is now online.'.format(BOT_NAME), as_user=True)
 
                 while not sigterm_event.is_set():
-                    time.sleep(1.0)
                     command, channel = parse_slack_output(sc.rtm_read())
                     if command and channel:
                         resp = handle_command(command, channel)
                         sc.api_call('chat.postMessage', channel=channel, text=resp, as_user=True)
+                    time.sleep(1.0)
 
             else:
                 logger.error('{} Connection failed, retrying ...'.format(AT_BOT))
