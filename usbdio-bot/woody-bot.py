@@ -24,7 +24,7 @@ BOT_NAME = 'woody-bot'
 # woody-bot's ID as an environment variable
 BOT_ID = os.environ.get('BOT_ID')
 AT_BOT = '<@' + BOT_ID + '>'
-BOT_COMMANDS = ['help', 'open', 'close', 'bounce', 'pulse' 'ping', 'exit']
+BOT_COMMANDS = ['help', 'open', 'close', 'bounce', 'pulse', 'ping', 'exit']
 
 # Basic setup
 logger = logging.getLogger(__name__)
@@ -92,7 +92,9 @@ def handle_command(cmdline, channel):
                    '\n  open N     Open a trigger, N=1-8' \
                    '\n  close N    Close a trigger N=1-8' \
                    '\n  pulse N    Open trigger N, wait 1 sec, then close N' \
-                   '\n  exit       Make ' + BOT_NAME + ' exit. '
+                   '\n  bounce N   Same as pulse N' \
+                   '\n  ping       Check if ' + BOT_NAME + ' is listening' \
+                   '\n  exit       Make ' + BOT_NAME + ' exit and stop listening. '
 
     elif cmd == 'open':
         # Which relay is being switched?
