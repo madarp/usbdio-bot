@@ -89,12 +89,14 @@ def handle_command(cmdline, channel):
 
     elif cmd == 'help':
         response = 'Available commands are:' \
+                   '\n```' \
                    '\n  open N     Open a trigger, N=1-8' \
                    '\n  close N    Close a trigger N=1-8' \
                    '\n  pulse N    Open trigger N, wait 1 sec, then close N' \
                    '\n  bounce N   Same as pulse N' \
                    '\n  ping       Check if ' + BOT_NAME + ' is listening' \
-                   '\n  exit       Make ' + BOT_NAME + ' exit and stop listening. '
+                   '\n  exit       Make ' + BOT_NAME + ' exit and stop listening. ' \
+                   '\n```'
 
     elif cmd == 'open':
         # Which relay is being switched?
