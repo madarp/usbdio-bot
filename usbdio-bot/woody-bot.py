@@ -58,8 +58,10 @@ def switch_relay(chan, state):
     """
     r = None
     if chan and chan in range(1, len(GPIO_PINS)+1):
+        logger.info('Setting chan {} state to {}'.format(chan, state))
         GPIO.output(GPIO_PINS[chan - 1], GPIO.LOW if state else GPIO.HIGH)
     else:
+        logger.error('Invalid chan index: {}'.format(chan))
         r = 'Please provide a trigger channel 1-8'
     return r
 
@@ -74,7 +76,7 @@ def handle_command(cmdline, channel):
     :param channel: The slack channel which received the command.
     :return: A Text string response to send to the Slack channel.
     """
-    logger.info('{} Received cmdline {} in channel {}'.format(AT_BOT, command, channel))
+    logger.info('{} Received cmdline "{}" in channel {}'.format(AT_BOT, command, channel))
     response = None
     args = cmdline.lower().split()
     cmd = args[0]
