@@ -17,8 +17,9 @@ import logging
 import signal
 from threading import Event
 
-import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO  # for apt-get, use 'sudo apt-get install python-rpi.gpio'
 from slackclient import SlackClient
+from websocket import WebSocketConnectionClosedException
 
 BOT_NAME = 'woody-bot'
 # woody-bot's ID as an environment variable
@@ -172,13 +173,14 @@ if __name__ == "__main__":
         GPIO.setup(p, GPIO.OUT)
         GPIO.output(p, GPIO.HIGH)
 
-    # Instantiate the Slack client
-    logger.info('{} creating new SlackClient'.format(AT_BOT))
-    sc = SlackClient(os.environ.get('BOT_TOKEN'))
-
     # Main loop, keep alive forever unless we receive a SIGTERM, SIGHUP, SIGINT
     while not sigterm_event.is_set():
+        sc = None
         try:
+            # Instantiate the Slack client
+            logger.info('{} creating new SlackClient'.format(AT_BOT))
+            sc = SlackClient(os.environ.get('BOT_TOKEN'))
+
             if sc.rtm_connect():
                 bot_start = datetime.datetime.now()
                 logger.info('{} is connected to server:\n{}'.format(AT_BOT, sc.server))
@@ -195,6 +197,17 @@ if __name__ == "__main__":
                 logger.error('{} Connection failed, retrying ...'.format(AT_BOT))
                 time.sleep(5.0)
 
+        except WebSocketConnectionClosedException:
+            # If remote host closed the connection or some network error happened, this exception will be raised.
+            # This sometimes happens in the rtm_read() function.
+            # See https://github.com/slackapi/python-slackclient/issues/36
+            error_str = 'The Slack RTM host has unexpectedly closed its websocket.\nRestarting ...'.format(AT_BOT)
+            logger.error(error_str, exc_info=True)
+            if sc is not None:
+                sc.api_call('chat.postMessage', channel='#bot-test', text=error_str, as_user=True)
+            time.sleep(5.0)
+            continue
+
         except KeyboardInterrupt:
             logger.info('{} Aborted by user')
             break
@@ -202,7 +215,8 @@ if __name__ == "__main__":
         except Exception as e:
             error_str = '{} Unhandled Exception in MAIN\n{}\nRestarting ...'.format(AT_BOT, str(e))
             logger.error(error_str, exc_info=True)
-            sc.api_call('chat.postMessage', channel='#bot-test', text=error_str, as_user=True)
+            if sc is not None:
+                sc.api_call('chat.postMessage', channel='#bot-test', text=error_str, as_user=True)
             time.sleep(5.0)
             continue
 
