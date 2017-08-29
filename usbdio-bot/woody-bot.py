@@ -22,6 +22,7 @@ from slackclient import SlackClient
 from websocket import WebSocketConnectionClosedException
 
 BOT_NAME = 'woody-bot'
+BOT_CHAN = '#bot-test'
 # woody-bot's ID as an environment variable
 BOT_ID = os.environ.get('BOT_ID')
 AT_BOT = '<@' + BOT_ID + '>'
@@ -33,6 +34,7 @@ sigterm_event = Event()
 bot_start = None
 
 # GPIO setup
+GPIO.cleanup()
 GPIO.setmode(GPIO.BCM)
 GPIO_PINS = (17, 18, 27, 22, 23, 24, 25, 4)
 
@@ -118,8 +120,7 @@ def handle_command(cmdline, channel):
             response = 'Trigger {} was pulsed for 1 second.'.format(chan)
 
     elif cmd == 'ping':
-        uptime = datetime.datetime.now() - bot_start
-        response = '{} is active, uptime={}'.format(BOT_NAME, uptime)
+        response = '{} is active, uptime={}'.format(BOT_NAME, str(datetime.datetime.now() - bot_start))
 
     elif cmd == 'exit':
         sigterm_event.set()
@@ -144,10 +145,25 @@ def parse_slack_output(slack_rtm_output):
     return None, None
 
 
+def post_message(slack_client, msg, chan=BOT_CHAN):
+    """
+    Posts a message to a slack channel using the chat.PostMessage api
+    :param slack_client:
+    :param msg: The text string message to post
+    :param chan: The slack channel name to post in
+    :return:
+    """
+    if slack_client is not None:
+        try:
+            sc.api_call('chat.postMessage', channel=chan, text=msg, as_user=True)
+        except Exception as x:
+            logger.error('{} Failed to post message "{}" to channel "{}"'.format(AT_BOT, msg, chan))
+            logger.error(str(x), exc_info=True)
+
+
 if __name__ == "__main__":
 
     app_start_time = datetime.datetime.now()
-    global bot_start
 
     print '\n'\
         '-------------------------------------------------------------------\n'\
@@ -165,7 +181,6 @@ if __name__ == "__main__":
     # Install signal handlers after all startup services are running.
     signal.signal(signal.SIGINT, sigterm_handler)
     signal.signal(signal.SIGTERM, sigterm_handler)
-    signal.signal(signal.SIGHUP, sigterm_handler)
 
     # Setup the GPIO relay control outputs
     for p in GPIO_PINS:
@@ -173,7 +188,7 @@ if __name__ == "__main__":
         GPIO.setup(p, GPIO.OUT)
         GPIO.output(p, GPIO.HIGH)
 
-    # Main loop, keep alive forever unless we receive a SIGTERM, SIGHUP, SIGINT
+    # Main loop, keep alive forever unless we receive a SIGTERM, SIGINT
     while not sigterm_event.is_set():
         sc = None
         try:
@@ -184,13 +199,13 @@ if __name__ == "__main__":
             if sc.rtm_connect():
                 bot_start = datetime.datetime.now()
                 logger.info('{} is connected to server:\n{}'.format(AT_BOT, sc.server))
-                sc.api_call('chat.postMessage', channel='#bot-test', text='{} is now online.'.format(BOT_NAME), as_user=True)
+                post_message(sc, '{} is now online.'.format(BOT_NAME))
 
                 while not sigterm_event.is_set():
                     command, channel = parse_slack_output(sc.rtm_read())
                     if command and channel:
                         resp = handle_command(command, channel)
-                        sc.api_call('chat.postMessage', channel=channel, text=resp, as_user=True)
+                        post_message(sc, resp, channel)
                     time.sleep(1.0)
 
             else:
@@ -203,20 +218,14 @@ if __name__ == "__main__":
             # See https://github.com/slackapi/python-slackclient/issues/36
             error_str = 'The Slack RTM host has unexpectedly closed its websocket.\nRestarting ...'.format(AT_BOT)
             logger.error(error_str, exc_info=True)
-            if sc is not None:
-                sc.api_call('chat.postMessage', channel='#bot-test', text=error_str, as_user=True)
+            post_message(sc, error_str)
             time.sleep(5.0)
             continue
-
-        except KeyboardInterrupt:
-            logger.info('{} Aborted by user')
-            break
 
         except Exception as e:
             error_str = '{} Unhandled Exception in MAIN\n{}\nRestarting ...'.format(AT_BOT, str(e))
             logger.error(error_str, exc_info=True)
-            if sc is not None:
-                sc.api_call('chat.postMessage', channel='#bot-test', text=error_str, as_user=True)
+            post_message(sc, error_str)
             time.sleep(5.0)
             continue
 
