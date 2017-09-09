@@ -16,8 +16,9 @@ from slackclient import SlackClient
 
 BOT_NAME = 'usbdio-bot'
 # usbdio-bot's ID as an environment variable
-BOT_ID = os.environ.get('USBDIO_BOT_ID')
-USBDIO_PATH = os.environ.get('USBDIO_PATH')
+BOT_ID = os.environ.get(BOT_NAME + '_id')
+BOT_TOKEN = os.environ.get(BOT_NAME + '_token')
+USBDIO_PATH = os.environ.get(BOT_NAME + '_path')
 USBDIO_TOOL = os.path.join(USBDIO_PATH, 'usbdio_info')
 
 # constants
@@ -25,7 +26,7 @@ AT_BOT = "<@" + BOT_ID + ">"
 EXAMPLE_COMMAND = "help"
 
 # instantiate Slack & Twilio clients
-slack_client = SlackClient(os.environ.get('USBDIO_BOT_TOKEN'))
+slack_client = SlackClient(BOT_TOKEN)
 
 
 def handle_command(command, channel):
@@ -80,7 +81,7 @@ def parse_slack_output(slack_rtm_output):
 if __name__ == "__main__":
     READ_WEBSOCKET_DELAY = 1  # 1 second delay between reading from firehose
     if slack_client.rtm_connect():
-        print("usbdio-bot {} connected and running!".format(BOT_ID))
+        print("src {} connected and running!".format(BOT_ID))
         while True:
             try:
                 command, channel = parse_slack_output(slack_client.rtm_read())
