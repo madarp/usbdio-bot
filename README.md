@@ -1,4 +1,4 @@
-(https://lumiere-a.akamaihd.net/v1/images/open-uri20150422-20810-10n7ovy_9b42e613.jpeg)
+![Woody from Toy Story](https://lumiere-a.akamaihd.net/v1/images/open-uri20150422-20810-10n7ovy_9b42e613.jpeg)
 # woody-bot
 An integration between Slack and a generic 8-channel dry contact relay board, running on a Raspberry Pi.  It is named Woody-bot because the Rpi and the relays are mounted on a piece of wood.  
 
