@@ -1,13 +1,22 @@
-# usbdio-bot
-An integration between Slack and exacqVision USB I/O Module (USBDIO)
+![Woody from Toy Story](https://lumiere-a.akamaihd.net/v1/images/open-uri20150422-20810-10n7ovy_9b42e613.jpeg)
+# woody-bot
+An integration between Slack and a generic 8-channel dry contact relay board, running on a Raspberry Pi.  It is named Woody-bot because the Rpi and the relays are mounted on a piece of wood.  
 
-This is an implementation of a custom SlackBot integration that controls an Exacq USBDIO hardware IoT relay.  The hardware description can be found here:
- * Exacq Model 5000-50200 USB DIO - https://exacq.com/products/io/
- * Toggles 4 digital outputs + 1 dry contact relay, and read 8 digital inputs.
+This is an implementation of a custom SlackBot integration that controls an 8 channel IoT relay, such as [this one](https://www.amazon.com/Elegoo-Channel-Optocoupler-Arduino-Raspberry/dp/B01HCFJC0Y/).
+The relays are connected to zone triggers on various intrusion panels made by DSC, Honeywell, Bosch.  This setup is used for project testing, because we have several remote developers who would like to trip 
+some intrusion zones but don't have physical access at our site.
 
-`usbdio-bot` internally uses the python slackclient module - http://slackapi.github.io/python-slackclient/
 
-When logged into your Slack Account , `usbdio-bot` will listen on the #usbdio-bot channel.  It listens for specific keyword commands (a command line) that will be forwarded to the USBDIO device for processing.
+When logged into your Slack Account , `woody-bot` will listen on specific channel.  It listens for specific keyword commands (a command line) that is parsed and handled.
+
+Available commands are
+* `open N`     Open a trigger, N=1-8
+* `close N`    Close a trigger N=1-8
+* `pulse N`    Open trigger N, wait 1 sec, then close N
+* `bounce N`   Same as pulse N
+* `ping`       Check if woody-bot is listening
+* `exit`       Make woody-bot exit and stop listening.
+
 
 
 
